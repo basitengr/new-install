@@ -26,16 +26,38 @@ curl -sS https://getcomposer.org/installer | php
 mv composer.phar /usr/local/bin/composer
 chmod +x /usr/local/bin/composer
 
-cd /var/www/
-composer create-project --prefer-dist laravel/laravel my_app
+composer -V
 
-chown -R www-data.www-data /var/www/my_app
-chmod -R 755 /var/www/my_app
-chmod -R 777 /var/www/my_app/storage
+composer create-project --prefer-dist laravel/laravel /var/www/myapp
+
+chown -R www-data.www-data /var/www/myapp
+chmod -R 755 /var/www/myapp
+chgrp -R www-data /var/www/myapp/storage /var/www/myapp/bootstrap/cache 
+chmod -R ug+rwx /var/www/myapp/storage /var/www/myapp/bootstrap/cache
 
 #....................test laravel installation.............
-cd /var/www/my_app
+cd /var/www/myapp
 php artisan serve
 
 #output should be
 #Laravel development server started: <http://127.0.0.1:8000>
+
+# ------------------- apache configuration -------------------
+
+cat /etc/apache2/sites-available/myapp.com.conf
+
+<VirtualHost *:80>
+    ServerName myapp.com
+
+    ServerAdmin admin@myapp.com
+    DocumentRoot /var/www/myapp/public
+
+    <Directory /var/www/myapp/public>
+        Options Indexes MultiViews
+        AllowOverride None
+        Require all granted
+    </Directory>
+
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
